@@ -38,7 +38,7 @@ export DOCKERFILE_FORMAT
 
 format:
 	echo "$$DOCKERFILE_FORMAT" | docker build -q . -f - -t temp
-	docker run --rm -it -v $(PWD):/s -w /s temp \
+	docker run --rm -it -p 8554:8554 -p 1935:1935 -v $(PWD):/s -w /s temp \
 	sh -c "find . -type f -name '*.go' | xargs gofumpt -l -w"
 
 define DOCKERFILE_TEST
@@ -118,12 +118,11 @@ endef
 export CONFIG_RUN
 
 run:
-	echo "$$DOCKERFILE_RUN" | docker build -q . -f - -t temp \
-	--build-arg CONFIG_RUN="$$CONFIG_RUN"
-	docker run --rm -it \
-	--network=host \
-	temp \
-	sh -c "/out"
+        echo "$$DOCKERFILE_RUN" | docker build -q . -f - -t temp \
+        --build-arg CONFIG_RUN="$$CONFIG_RUN"
+        docker run --rm -it -e RTSP_PROTOCOLS=tcp -p 8554:8554 -p 1935:1935 \
+        temp \
+        sh -c "/out"
 
 define DOCKERFILE_RELEASE
 FROM amd64/$(BASE_IMAGE)
